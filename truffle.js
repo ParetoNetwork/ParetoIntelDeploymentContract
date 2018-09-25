@@ -1,6 +1,6 @@
 var HDWalletProvider = require("truffle-hdwallet-provider");
 
-var mnemonic = "avocado armed also position solution total token maze deny neutral bless share";
+var mnemonic = "";
 
 module.exports = {
   networks: {
@@ -13,7 +13,7 @@ module.exports = {
       provider: function() {
         return new HDWalletProvider(mnemonic, "https://ropsten.infura.io/QWMgExFuGzhpu2jUr6Pq",0,9)
       },
-      network_id: ropsten,
+      network_id: 3,
       gas: 4712388
 
     },
@@ -21,7 +21,7 @@ module.exports = {
       provider: function() {
         return new HDWalletProvider(mnemonic, "https://rinkeby.infura.io/QWMgExFuGzhpu2jUr6Pq",0 ,9)
       },
-      network_id: rinkeby,
+      network_id: 4,
       // gas: 6712388,
       // gasPrice:8000000000
     },
@@ -29,7 +29,7 @@ module.exports = {
       provider: function() {
         return new HDWalletProvider(mnemonic, "https://mainnet.infura.io/QWMgExFuGzhpu2jUr6Pq")
       },
-      network_id: mainnet,
+      network_id: 1,
       gas: 4712388
 
     }   
