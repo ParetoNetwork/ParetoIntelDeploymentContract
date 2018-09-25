@@ -13,7 +13,7 @@ module.exports = {
       provider: function() {
         return new HDWalletProvider(mnemonic, "https://ropsten.infura.io/QWMgExFuGzhpu2jUr6Pq",0,9)
       },
-      network_id: 3,
+      network_id: ropsten,
       gas: 4712388
 
     },
@@ -21,7 +21,7 @@ module.exports = {
       provider: function() {
         return new HDWalletProvider(mnemonic, "https://rinkeby.infura.io/QWMgExFuGzhpu2jUr6Pq",0 ,9)
       },
-      network_id: 4,
+      network_id: rinkeby,
       // gas: 6712388,
       // gasPrice:8000000000
     },
@@ -29,7 +29,7 @@ module.exports = {
       provider: function() {
         return new HDWalletProvider(mnemonic, "https://mainnet.infura.io/QWMgExFuGzhpu2jUr6Pq")
       },
-      network_id: 1,
+      network_id: mainnet,
       gas: 4712388
 
     }   
