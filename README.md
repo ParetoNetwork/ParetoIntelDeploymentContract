@@ -19,5 +19,5 @@ Deploy the Intel contract using following command
 ```
 truffle migrate --network mainnet
 ```
-### 5 - Integrate the artifact file into staging branch of ParetoNetwork server
+### 5 - Integrate the artifact file into staging branch of ParetoNetworkServer
 Copy the `Intel.json` file under `build/contracts` on this repository and replace it with the `Intel.json` file under `build/contracts` in `staging` branch of `ParetoNetworkServer`.
