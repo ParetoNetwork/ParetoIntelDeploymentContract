@@ -1,0 +1,22 @@
+{
+  "name": "paretointeldeploymentcontract",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://sheraz1392@gmail.com:shazi123shazi@github.com/ParetoNetwork/ParetoIntelDeploymentContract.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ParetoNetwork/ParetoIntelDeploymentContract/issues"
+  },
+  "homepage": "https://github.com/ParetoNetwork/ParetoIntelDeploymentContract#readme",
+  "dependencies": {
+    "truffle-hdwallet-provider": "0.0.6"
+  }
+}
