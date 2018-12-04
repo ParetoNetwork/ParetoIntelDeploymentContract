@@ -12,7 +12,7 @@ npm install
 In `truffle.js` file, on line # 3, set your mnemonic.
 
 ### 3 - Set owner's address
-Under `migrations` folder in `2_deploy_Intel.js`, on line # 3, set the address of owner of Intel contract.
+Under `migrations` folder in `2_deploy_Intel.js`, on line # 3, set the address of owner of Intel contract. (Often times, the deployment address is the address owner, so the deployment address would be address[0] of the mnemonic phrase)
 
 ### 4 - Deploy Intel contract on mainnet
 Deploy the Intel contract using following command
