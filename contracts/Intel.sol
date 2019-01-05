@@ -66,53 +66,73 @@ contract Intel{
     
     using SafeMath for uint256;
     
+    //Struct to main the state of an Intel
     struct IntelState {
         address intelProvider;
         uint depositAmount;
         uint desiredReward;
-        // total balance of Pareto tokens given for this intel
-        // including the intel provider’s deposit
+  
+        // total balance of Pareto tokens given for this intel including the intel provider’s deposit
         uint balance;
+
+       //unique identifier 
         uint intelID;
+
         // timestamp for when rewards can be collected
         uint rewardAfter;
+
         // flag indicating whether the rewards have been collected
         bool rewarded;
-                // stores how many Pareto tokens were given for this intel
-        // in case you want to enforce a max amount per contributor
+        
+        // stores how many Pareto tokens were given for this intel in case you want to enforce a max amount per contributor
         address[] contributionsList;
         mapping(address => uint) contributions;
-
     }
 
+    // mapping for all of the Intels
+    mapping(uint => IntelState) intelDB; 
 
-    mapping(uint => IntelState) intelDB;    // mapping for all of the Intels
-    mapping(address => IntelState[]) public IntelsByProvider;  // mapping of Intels by a single provider
-    mapping(address => uint) public balances;  // mapping for the storage of deposit amounts by addresses
-    mapping(address => bool) public registered; // mapping for storage of addresses who have atleast deposited once
-    address[] public participants; // list of addresses who have had made deposited to the smart contract
-    uint public totalParetoBalance; // total Pareto token balance inside the Intel contract
+    // mapping of Intels by a single provider
+    mapping(address => IntelState[]) public intelsByProvider;
+    
+    // mapping for the storage of deposit amounts by addresses
+    mapping(address => uint) public balances;
+
+    // mapping for storage of addresses who have at least deposited once
+    mapping(address => bool) public registered; 
+
+    // list of addresses who have had made deposited to the smart contract
+    address[] public participants;
+
+    // total Pareto token balance inside the Intel contract
+    uint public totalParetoBalance; 
+
     uint[] intelIndexes;
     
-    uint public intelCount;  // total count of Intels
+    // total count of Intels
+    uint public intelCount; 
     
+    // Storage variable to hold the address of the owner of the intel contract
+    address public owner;    
+    
+    // Storage variable of type ERC20 to hold Pareto Token
+    ERC20 public token;  
 
-    address public owner;    // Storage variable to hold the address of owner
-    
-    ERC20 public token;   // Storage variable of type ERC20 to hold Pareto token's address
-    address public ParetoAddress;
+    // Address of the Pareto Token
+    address public paretoAddress;
 
     
     constructor(address _owner, address _token) public {
-        owner = _owner;  // owner is a Pareto wallet which should be able to perform admin functions
+        // owner is a Pareto wallet which should be able to perform admin functions
+        owner = _owner; 
         token = ERC20(_token);
-        ParetoAddress = _token;
+        paretoAddress = _token;
     }
     
 
-    // modifier to check of the sender of transaction is the owner
+    // modifier to check to see if  the sender of transaction is the owner
     modifier onlyOwner(){
-        require(msg.sender == owner, "sender must be the owner only");
+        require(msg.sender == owner, "Sender of this transaction can be only the owner");
         _;
     }
 
@@ -127,32 +147,38 @@ contract Intel{
     event NewIntel(address intelProvider, uint depositAmount, uint desiredReward, uint intelID, uint ttl);
     event RewardDistributed(uint intelIndex, uint provider_amount, address provider, address distributor, uint distributor_amount);
     event LogProxy(address destination, address account, uint amount, uint gasLimit);
+    event Deposited(address from, address to, uint amount);
     
-
-
-    event Depsosited(address from, address to, uint amount);
     function makeDeposit(address _address, uint _amount) public {
-        require(_address != address(0x0), "address is invalid");
-        require(_amount > 0, "amount should be greater than 0");
+        require(_address != address(0x0), "Address is invalid");
+        require(_amount > 0, "Deposit amount needs to be greater than 0");
 
-        token.transferFrom(_address, address(this), _amount);  // Transfer token for depositing address to the Intel smart contract
-        balances[_address] = balances[_address].add(_amount);  // Increase balance for the depositing address in balances map
+        // Transfer token from the  depositing address to the Intel smart contract
+        token.transferFrom(_address, address(this), _amount);
 
-        if(!registered[_address]) {     // check if the user is already registered
+        // Increases the balance for the depositing address in the balances map 
+        balances[_address] = balances[_address].add(_amount); 
+
+        // We check to see  if the user who is making the deposit is already registered
+        // If they are not registered, then we add their address to the participants array, and update 
+        // the registered map address => true
+        if(!registered[_address]) {     
             participants.push(_address);
             registered[_address] = true;
         }
 
-        totalParetoBalance = totalParetoBalance.add(_amount);  // add amount to total to keep track of total deposited pareto inside the smart contract
+        // Add the deposited amount to the total Pareto Balance to keep track of total deposited pareto inside the smart contract
+        totalParetoBalance = totalParetoBalance.add(_amount);  
         
-        emit Depsosited(_address, address(this), _amount);
+		// Fire the deposited event with the from address, to address, and amount
+        emit Deposited(_address, address(this), _amount);
     }
     
     /// @notice this function creates an Intel
     /// @dev Uses 'now' for timestamps.
-    /// @param intelProvider is the address of the Intel's provider
-    /// @param depositAmount is the amount of Pareto tokens deposited by provider
-    /// @param desiredReward is the amount of Pareto tokens desired by provider as reward
+    /// @param intelProvider is the address of the creator\provider of the Intel
+    /// @param depositAmount is the amount of Pareto tokens staked by the provider
+    /// @param desiredReward is the amount of Pareto tokens desired by the provider as the reward
     /// @param intelID is the ID of Intel which is mapped against an Intel in IntelDB as well as the database external to Ethereum
     /// @param ttl is the time in EPOCH format until the Intel remains active and accepts rewards
     /// requires 210769 gas in Rinkeby Network
@@ -166,26 +192,46 @@ contract Intel{
         IntelState storage intel = intelDB[intelID];
         require(intel.depositAmount == 0, "Intel with the provided ID already exists");
 
-        if(depositAmount <= balances[intelProvider]) {                      // check if the user already has deposit amount worth of tokens deposited in balances
-            balances[intelProvider] = balances[intelProvider].sub(depositAmount);   // decrease user's token amount in balances by deposit amount
-            balances[address(this)] = balances[address(this)].add(depositAmount);   // add token amount in balances worth despositAmount to this smart contract
+        // First, check if the user already has deposited enough Paretos into this smart contract to satisfy the stake amount required to create the Intel
+        if(depositAmount <= balances[intelProvider]) {                      
+
+            // The user has deposited enough Pareto into this contract to create the Intel. Deduct the amount from the user's balance
+            balances[intelProvider] = balances[intelProvider].sub(depositAmount);   
+
+            // In the balances map for the address of this contract, we will maintain the amount of Pareto token used to create intel.
+            balances[address(this)] = balances[address(this)].add(depositAmount);   
+
         } else {
-            token.transferFrom(intelProvider, address(this), depositAmount);  // transfer token from caller to Intel contract
-            balances[address(this)] = balances[address(this)].add(depositAmount); // add token amount in balances worth despositAmount for this smart contract
-            totalParetoBalance = totalParetoBalance.add(depositAmount);    // add amount to total to keep track of total deposited pareto inside the smart contract
+            //The user does NOT have an adequate balance to cover the creation of the intel. We will transfer the depositAmount from the user's address to the intel contract.
+            token.transferFrom(intelProvider, address(this), depositAmount);  
+
+            // In the balances map for the address of this contract, we will maintain the amount of Pareto token used to create intel. 
+            balances[address(this)] = balances[address(this)].add(depositAmount); 
+   
+            // Add depositAmount to the total Pareto Balance to keep track of total deposited pareto inside the smart contract
+            totalParetoBalance = totalParetoBalance.add(depositAmount);   
         }
 
+        //For the new intel, create a contributionsList
         address[] memory contributionsList;
+
+        //Create the new IntelState Struct
         IntelState memory newIntel = IntelState(intelProvider, depositAmount, desiredReward, depositAmount, intelID, ttl, false, contributionsList);
+
+        //Add the IntelState to the intelDB indexed by IntelID
         intelDB[intelID] = newIntel;
-        IntelsByProvider[intelProvider].push(newIntel);
 
+        //Populate the intelsByProvider map
+        intelsByProvider[intelProvider].push(newIntel);
+
+        //maintain a separate array of IntelIDs.
         intelIndexes.push(intelID);
-        intelCount++;
-        
 
+        //Increment the intel count
+        intelCount++;
+     
+        //Trigger a NewIntel event   
         emit NewIntel(intelProvider, depositAmount, desiredReward, intelID, ttl);
-        
     }
     
 
@@ -198,38 +244,63 @@ contract Intel{
     /// requires 72283 gas on Rinkeby Network
     function sendReward(uint intelIndex, uint rewardAmount) public returns(bool success){
 
+        //Ensure we have a valid intelIndex
         require(intelIndex > 0, "Intel's ID should be greater than 0.");
+
+		//Ensure that the rewardAmount is greater than 0.
         require(rewardAmount > 0, "Reward amount should be greater than 0.");
 
         IntelState storage intel = intelDB[intelIndex];
-        require(intel.intelProvider != address(0x0), "Intel for the provided ID does not exist.");  // make sure that Intel exists
-        require(msg.sender != intel.intelProvider, "msg.sender should not be the current Intel's provider."); // rewarding address should not be an intel address
-        require(intel.rewardAfter > now, "Intel is expired");       //You cannot reward intel if the timestamp of the transaction is greater than rewardAfter
-        require(!intel.rewarded, "Intel is already rewarded");  // You cannot reward intel if the intel’s rewards have already been distributed
+
+        // make sure that Intel exists 
+        require(intel.intelProvider != address(0x0), "Intel for the provided ID does not exist.");
         
-        if(rewardAmount <= balances[msg.sender]) {      // check if the user already has rewardAmount worth of tokens deposited in balances
-            balances[msg.sender] = balances[msg.sender].sub(rewardAmount);  // decrease user's token amount in balances by rewardAmount
-            balances[address(this)] = balances[address(this)].add(rewardAmount); // add token amount in balances worth rewardAmount to this smart contract
+        //Ensure that the person who is performing the reward is not the IntelProvider
+        require(msg.sender != intel.intelProvider, "msg.sender should not be the current Intel's provider."); 
+        
+        //You cannot reward intel if the timestamp of the reward transaction is greater than rewardAfter variable of the Intel.
+        require(intel.rewardAfter > now, "Intel is expired");  
+
+        // You cannot reward intel if the intel’s rewards have already been distributed
+        require(!intel.rewarded, "Intel is already rewarded"); 
+     
+        // Check if the user who is sending the reward already has rewardAmount worth of tokens deposited in their balance
+        if(rewardAmount <= balances[msg.sender]) {      
+            //The user who is sending reward has enough deposited tokens to make the transaction. Hence, decrease the 
+            //the user's token amount from balances map by rewardAmount
+            balances[msg.sender] = balances[msg.sender].sub(rewardAmount);  
+            
+            //In the balance map for this contract address, we keep track of the total amount transacted.  This looks funny. Are we going to be double counting?
+            balances[address(this)] = balances[address(this)].add(rewardAmount); 
         } else {
-            token.transferFrom(msg.sender, address(this), rewardAmount);  // transfer token from caller to Intel contract
-            balances[address(this)] = balances[address(this)].add(rewardAmount); // add token amount in balances worth rewardAmount for this smart contract
-            totalParetoBalance = totalParetoBalance.add(rewardAmount);   // add amount to total to keep track of total deposited pareto inside the smart contract
+
+            //The user who is sending reward does NOT have  enough deposited tokens to make the transaction. Hence, transfer token from caller to Intel Contract
+            token.transferFrom(msg.sender, address(this), rewardAmount); 
+
+            // add token amount in balances worth rewardAmount for this smart contract. This looks fishy. What are we tracking here
+            balances[address(this)] = balances[address(this)].add(rewardAmount);
+
+            // add amount to total to keep track of total deposited pareto inside the smart contract
+            totalParetoBalance = totalParetoBalance.add(rewardAmount);   
         }
 
+        //On the intel contract, increment the balance by the rewardAmount.
         intel.balance = intel.balance.add(rewardAmount);
 
+        //On the intel contract, add the address of the person who is sending the reward, if they don't already exist
         if(intel.contributions[msg.sender] == 0){
             intel.contributionsList.push(msg.sender);
         }
         
+        //On the intel contract, increase the contributions map with this sender address by the amount rewarded 
         intel.contributions[msg.sender] = intel.contributions[msg.sender].add(rewardAmount);
         
 
+        //Fire the reward event
         emit Reward(msg.sender, intelIndex, rewardAmount);
 
 
         return true;
-
     }
     
 
@@ -306,7 +377,7 @@ contract Intel{
     function setParetoToken(address _token) public onlyOwner{
 
         token = ERC20(_token);
-        ParetoAddress = _token;
+        paretoAddress = _token;
 
     }
     
@@ -321,7 +392,7 @@ contract Intel{
     /// requires 27431 gas on Rinkeby Network
     function proxy(address destination, address account, uint amount, uint gasLimit) public onlyOwner{
 
-        require(destination != ParetoAddress, "Pareto Token cannot be assigned as destination.");    // check that the destination is not the Pareto token contract
+        require(destination != paretoAddress, "Pareto Token cannot be assigned as destination.");    // check that the destination is not the Pareto token contract
 
         // make the call to transfer function of the 'destination' contract
         // if(!address(destination).call.gas(gasLimit)(bytes4(keccak256("transfer(address,uint256)")),account, amount)){
@@ -404,7 +475,7 @@ contract Intel{
 
     function getIntelsByProvider(address _provider) public view returns (uint[] intelID, address[] intelProvider, uint[] depositAmount, uint[] desiredReward, uint[] balance, uint[] rewardAfter, bool[] rewarded){
         
-        uint length = IntelsByProvider[_provider].length;
+        uint length = intelsByProvider[_provider].length;
 
         intelID = new uint[](length);
         intelProvider = new address[](length);
@@ -414,7 +485,7 @@ contract Intel{
         rewardAfter = new uint[](length);
         rewarded = new bool[](length);
 
-        IntelState[] memory intels = IntelsByProvider[_provider];
+        IntelState[] memory intels = intelsByProvider[_provider];
 
         for(uint i = 0; i < length; i++){
             intelID[i] = intels[i].intelID;
