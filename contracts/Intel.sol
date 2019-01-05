@@ -175,7 +175,7 @@ contract Intel{
     }
     
     /// @notice this function creates an Intel
-    /// @dev Uses 'now' for timestamps.
+    /// @dev Uses 'now' for timestamps. balance[address(this)] is for allocating tokens to the Intel contract for when we subtract tokens from user’s address in case of creation or rewarding of Intels. we actually should add tokens to somewhere when we subtract them from user’s balance and the smart contract’s address is being used for that.
     /// @param intelProvider is the address of the creator\provider of the Intel
     /// @param depositAmount is the amount of Pareto tokens staked by the provider
     /// @param desiredReward is the amount of Pareto tokens desired by the provider as the reward
@@ -237,7 +237,7 @@ contract Intel{
 
     
     /// @notice this function sends rewards to the Intel
-    /// @dev Uses 'now' for timestamps.
+    /// @dev Uses 'now' for timestamps. balance[address(this)] is for allocating tokens to the Intel contract for when we subtract tokens from user’s address in case of creation or rewarding of Intels. we actually should add tokens to somewhere when we subtract them from user’s balance and the smart contract’s address is being used for that.
     /// @param intelIndex is the ID of the Intel to send the rewards to
     /// @param rewardAmount is the amount of Pareto tokens the rewarder wants to reward to the Intel
     /// @return returns true in case of successful completion
@@ -306,7 +306,7 @@ contract Intel{
 
     
     /// @notice this function distributes rewards to the Intel provider
-    /// @dev Uses 'now' for timestamps.
+    /// @dev Uses 'now' for timestamps. Uses balances[address(this)] to subtract the tokens from the smart contract in balances mapping.
     /// @param intelIndex is the ID of the Intel to distribute tokens to
     /// @return returns true in case of successful completion
     /// requires 91837 gas on Rinkeby Network
