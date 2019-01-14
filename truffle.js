@@ -1,6 +1,6 @@
 var HDWalletProvider = require("truffle-hdwallet-provider");
 
-var mnemonic = "";
+var mnemonic = "avocado armed also position solution total token maze deny neutral bless share";
 
 module.exports = {
   networks: {
