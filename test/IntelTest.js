@@ -29,10 +29,14 @@ const DummyTokenInstance = new web3.eth.Contract(
   Dummy_Contract_Schema.networks["3"].address
 );
 
+//deploy the contract
+
 contract("Intel", () => {
   let gasPrice;
-  let _intelID = 17;
+  let _intelID = 19;
   let accounts;
+
+  console.log("deploying the contract with _intelID " + _intelID );
 
   (async () => {
     // Get the gas price for current network
@@ -47,6 +51,7 @@ contract("Intel", () => {
 
   it("Test fallback function", async () => {
     try {
+      console.log("Fallback function should not accept Ether.");
       await IntelInstance.sendTransaction({
         from: accounts[7],
         value: web3.toWei("0.1", "ether")
@@ -62,13 +67,17 @@ contract("Intel", () => {
     const depositor = accounts[0];
     const depositAmount = "100";
 
+    console.log("Deposit " + depositAmount + " Paretos");
+
+    //calculate the gas
     const approveGas = await ParetoTokenInstance.methods
       .approve(
-        IntelInstance.options.address,
+        IntelInstance.options.address, //Intel Contract Address
         web3.utils.toWei(depositAmount, "ether")
       )
       .estimateGas({ from: depositor });
 
+	//send Pareto tokens
     await await ParetoTokenInstance.methods
       .approve(
         IntelInstance.options.address,
@@ -79,22 +88,26 @@ contract("Intel", () => {
         gas: approveGas
       });
 
+    //calculate gas
     const depositGas = await IntelInstance.methods
       .makeDeposit(depositor, web3.utils.toWei(depositAmount, "ether"))
       .estimateGas({ from: depositor });
 
+    //do the deposit
     await IntelInstance.methods
       .makeDeposit(depositor, web3.utils.toWei(depositAmount, "ether"))
       .send({ from: depositor, gas: depositGas });
   });
 
-  it("Create Intel using deposit", async () => {
+  it("Create Intel using the amount that was deposited", async () => {
     accounts = await web3.eth.getAccounts();
 
     const _depositAmount = "100";
     const _desiredReward = "1000";
     const _ttl = Math.round(new Date().getTime() / 1000) + 11174; // add five seconds to to allow the rewarder to reward pareto tokens
     const provider_address = accounts[0];
+
+    console.log("Creating Intel with Deposit of " + _depositAmount + " and desired reward of " + _desiredReward );
 
     // Call the create function on Intel contract to create an Intel
     gas = await IntelInstance.methods
@@ -106,6 +119,8 @@ contract("Intel", () => {
         _ttl
       )
       .estimateGas({ from: provider_address });
+
+	//create the intel
     console.log("create requires ", gas, " gas");
     await IntelInstance.methods
       .create(
@@ -118,7 +133,7 @@ contract("Intel", () => {
       .send({ from: provider_address, gas });
   });
 
-  it("Create Intel using two transactions, which are approve and createIntel", async () => {
+  it("Create Intel without amount deposited. Use two transactions, which are approve and createIntel", async () => {
     accounts = await web3.eth.getAccounts();
 
     const Intel_Address = IntelInstance.options.address;
@@ -128,6 +143,7 @@ contract("Intel", () => {
     const provider_address = accounts[1];
 
     // // approve the '_depositAmount' tokens from provider to Intel Contract
+    console.log("Approve " + _depositAmount + " to the Intel Contract "); 
     let gas = await ParetoTokenInstance.methods
       .approve(Intel_Address, web3.utils.toWei(_depositAmount, "ether"))
       .estimateGas({ from: provider_address });
@@ -136,6 +152,7 @@ contract("Intel", () => {
       .send({ from: provider_address, gas });
 
     // Call the create function on Intel contract to create an Intel
+    console.log("Send the deposit amount " + _depositAmount + " to the Intel Contract");
     gas = await IntelInstance.methods
       .create(
         provider_address,
@@ -157,6 +174,9 @@ contract("Intel", () => {
       .send({ from: provider_address, gas });
   });
 
+
+  console.log("Now we have two intels created");
+
   it("Send Reward using deposits", async () => {
     accounts = await web3.eth.getAccounts();
 
@@ -166,6 +186,7 @@ contract("Intel", () => {
 
     const _rewardAmount = "70";
 
+    console.log("Send a reward of " + _rewardAmount + " using the deposit function to Intel Contract 1");
 
     // approve the 'rewardAmount' tokens from rewarder to Intel Contract
     gas = await ParetoTokenInstance.methods
@@ -201,6 +222,8 @@ contract("Intel", () => {
     const Intel_Address = IntelInstance.options.address;
 
     const _rewardAmount = "70";
+
+    console.log("Send a reward of " + _rewardAmount + " without using the deposit function to Intel Contract 1. 2 Transactions.");
 
     // approve the 'rewardAmount' tokens from rewarder to Intel Contract
     gas = await ParetoTokenInstance.methods
