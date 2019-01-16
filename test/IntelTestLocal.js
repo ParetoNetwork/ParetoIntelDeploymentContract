@@ -18,6 +18,7 @@ contract("Test Intel Contract", async (accounts) => {
     it("Approve 10 Pareto tokens from accounts one", async () => {
         const depositAmount = web3.toWei("10", "ether");
 
+        // approve 10 Pareto tokens
         await TokenInstance.approve(IntelInstance.address, depositAmount, { from: account_one })
 
         const account_one_approve_after = await TokenInstance.allowance.call(account_one, IntelInstance.address);
@@ -31,6 +32,7 @@ contract("Test Intel Contract", async (accounts) => {
 
         const account_one_deposit_before = await IntelInstance.getParetoBalance.call(account_one);
 
+        // deposit 10 Pareto tokens from account one
         await IntelInstance.makeDeposit(account_one, depositAmount, { from: account_one });
 
         const account_one_deposit_after = await IntelInstance.getParetoBalance.call(account_one);
@@ -47,6 +49,7 @@ contract("Test Intel Contract", async (accounts) => {
 
         const account_one_deposit_before = await IntelInstance.getParetoBalance.call(account_one);
 
+        //create Intel from account one. It will automatically make use of deposits that we did in the previous test
         await IntelInstance.create(account_one, depositAmount, desiredReward, intelID, ttl, { from: account_one });
 
         const account_one_deposit_after = await IntelInstance.getParetoBalance.call(account_one);
@@ -61,12 +64,14 @@ contract("Test Intel Contract", async (accounts) => {
         const ttl = Math.round(new Date().getTime() / 1000) + 10;
         const intelID = 2;
 
+        // approve tokens to Intel contract from account two
         await TokenInstance.approve(IntelInstance.address, depositAmount, { from: account_two })
         const account_two_approve_after = await TokenInstance.allowance.call(account_two, IntelInstance.address);
         assert.equal(web3.toBigNumber(depositAmount).toNumber(), account_two_approve_after.toNumber());
 
         const account_two_token_balance_before = await TokenInstance.balanceOf.call(account_two);
 
+        //create Intel from account two. This will do the actual transfer of Pareto tokens as the account two does not have any deposits Pareto tokens
         await IntelInstance.create(account_two, depositAmount, desiredReward, intelID, ttl, { from: account_two });
 
         const account_two_token_balance_after = await TokenInstance.balanceOf.call(account_two);
@@ -80,13 +85,16 @@ contract("Test Intel Contract", async (accounts) => {
         const intelID = 1;
         let Intel;
 
+        // approve 70 tokens from account two to Intel contract
         await TokenInstance.approve(IntelInstance.address, depositAmount, { from: account_two });
 
+        //depsoit 70 tokens from account two to Intel contract
         await IntelInstance.makeDeposit(account_two, depositAmount, { from: account_two });
 
         Intel = await IntelInstance.getIntel.call(intelID);
         const IntelBalance_before = Intel[3].toNumber()
 
+        // send the reward to Intel one from account two. It will automatically use deposits as the account two has enough deposit balance in Intel contract
         await IntelInstance.sendReward(intelID, depositAmount, { from: account_two });
 
         Intel = await IntelInstance.getIntel.call(intelID);
@@ -104,6 +112,7 @@ contract("Test Intel Contract", async (accounts) => {
         const intelID = 1;
         let Intel;
 
+        // approve 80 tokens from account three to Intel contract
         await TokenInstance.approve(IntelInstance.address, depositAmount, { from: account_three });
 
         Intel = await IntelInstance.getIntel.call(intelID);
@@ -111,6 +120,7 @@ contract("Test Intel Contract", async (accounts) => {
 
         const account_three_token_balance_before = await TokenInstance.balanceOf.call(account_three);
 
+        // send reward to Intel one. It will do the actual transfer of Pareto tokens as account three does not have enough deposits in the Intel contract.
         await IntelInstance.sendReward(intelID, depositAmount, { from: account_three });
 
         Intel = await IntelInstance.getIntel.call(intelID);
@@ -138,14 +148,20 @@ contract("Test Intel Contract", async (accounts) => {
         return new Promise((resolve, reject) => {
             setTimeout(async () => {
                 try {
+
+                    // distribute the rewards of Intel one by making transaction from account one
                     await IntelInstance.distributeReward(intelID, { from: account_one });
 
                     const account_one_token_balance_after = await TokenInstance.balanceOf.call(account_one); 
+
+                    // expected account one's balance should be old_balance + 95% of Intel's balance
                     const expected_account_one_balance = (account_one_token_balance_before.toNumber() + (web3.toBigNumber(IntelBalance).toNumber() * .95)).toPrecision(10)
                     
                     assert.equal(expected_account_one_balance, account_one_token_balance_after.toNumber());
 
                     const owner_balance_after = await IntelInstance.getParetoBalance.call(owner);
+
+                    // owner's new balance should be old_balance + 5% of Intel balance
                     assert.equal((owner_balance_before.toNumber() + (web3.toBigNumber(IntelBalance).toNumber() * 0.05)).toPrecision(10), owner_balance_after.toNumber())
 
 
@@ -162,13 +178,16 @@ contract("Test Intel Contract", async (accounts) => {
         const intelID = 2;
         let Intel;
 
+        //approve 150 tokens from account one to Intel contract
         await TokenInstance.approve(IntelInstance.address, depositAmount, { from: account_one });
 
+        //deposit 150 tokens from account one to Intel contract
         await IntelInstance.makeDeposit(account_one, depositAmount, { from: account_one });
 
         Intel = await IntelInstance.getIntel.call(intelID);
         const IntelBalance_before = Intel[3].toNumber()
 
+        //send reward from account one to Intel two. It will automatically deposits from account one as it has enough deposits.
         await IntelInstance.sendReward(intelID, depositAmount, { from: account_one });
 
         Intel = await IntelInstance.getIntel.call(intelID);
@@ -185,6 +204,7 @@ contract("Test Intel Contract", async (accounts) => {
         const intelID = 2;
         let Intel;
 
+        // approve 800 tokens from account three to Intel contract.
         await TokenInstance.approve(IntelInstance.address, depositAmount, { from: account_three });
 
         Intel = await IntelInstance.getIntel.call(intelID);
@@ -192,6 +212,7 @@ contract("Test Intel Contract", async (accounts) => {
 
         const account_three_token_balance_before = await TokenInstance.balanceOf.call(account_three);
 
+        //send reward from account three to Intel two. It will do the actual transfer of Pareto tokens as account three does not have enough deposited balance in Intel contract
         await IntelInstance.sendReward(intelID, depositAmount, { from: account_three });
 
         Intel = await IntelInstance.getIntel.call(intelID);
@@ -219,14 +240,19 @@ contract("Test Intel Contract", async (accounts) => {
         return new Promise((resolve, reject) => {
             setTimeout(async () => {
                 try {
+                    // distribute the rewards of Intel two by making transaction from account two
                     await IntelInstance.distributeReward(intelID, { from: account_two });
 
                     const account_two_token_balance_after = await TokenInstance.balanceOf.call(account_two); 
+
+                    // expected account two's balance should be old_balance + 95% of Intel's balance
                     const expected_account_two_balance = (account_two_token_balance_before.toNumber() + (web3.toBigNumber(IntelBalance).toNumber() * .95)).toPrecision(10)
 
                     assert.equal(expected_account_two_balance, account_two_token_balance_after.toNumber());
 
                     const owner_balance_after = await IntelInstance.getParetoBalance.call(owner);
+                    
+                    // owner's new balance should be old_balance + 5% of Intel balance
                     assert.equal((owner_balance_before.toNumber() + (web3.toBigNumber(IntelBalance).toNumber() * 0.05)).toPrecision(10), owner_balance_after.toNumber())
 
                     resolve();
