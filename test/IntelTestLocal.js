@@ -152,11 +152,11 @@ contract("Test Intel Contract", async (accounts) => {
                     // distribute the rewards of Intel one by making transaction from account one
                     await IntelInstance.distributeReward(intelID, { from: account_one });
 
-                    const account_one_token_balance_after = await TokenInstance.balanceOf.call(account_one); 
+                    const account_one_token_balance_after = await TokenInstance.balanceOf.call(account_one);
 
                     // expected account one's balance should be old_balance + 95% of Intel's balance
                     const expected_account_one_balance = (account_one_token_balance_before.toNumber() + (web3.toBigNumber(IntelBalance).toNumber() * .95)).toPrecision(10)
-                    
+
                     assert.equal(expected_account_one_balance, account_one_token_balance_after.toNumber());
 
                     const owner_balance_after = await IntelInstance.getParetoBalance.call(owner);
@@ -243,7 +243,7 @@ contract("Test Intel Contract", async (accounts) => {
                     // distribute the rewards of Intel two by making transaction from account two
                     await IntelInstance.distributeReward(intelID, { from: account_two });
 
-                    const account_two_token_balance_after = await TokenInstance.balanceOf.call(account_two); 
+                    const account_two_token_balance_after = await TokenInstance.balanceOf.call(account_two);
 
                     // expected account two's balance should be old_balance + 95% of Intel's balance
                     const expected_account_two_balance = (account_two_token_balance_before.toNumber() + (web3.toBigNumber(IntelBalance).toNumber() * .95)).toPrecision(10)
@@ -251,7 +251,7 @@ contract("Test Intel Contract", async (accounts) => {
                     assert.equal(expected_account_two_balance, account_two_token_balance_after.toNumber());
 
                     const owner_balance_after = await IntelInstance.getParetoBalance.call(owner);
-                    
+
                     // owner's new balance should be old_balance + 5% of Intel balance
                     assert.equal((owner_balance_before.toNumber() + (web3.toBigNumber(IntelBalance).toNumber() * 0.05)).toPrecision(10), owner_balance_after.toNumber())
 
@@ -261,6 +261,54 @@ contract("Test Intel Contract", async (accounts) => {
                 }
             }, 7000);
         })
+    })
+
+    it("Distribute Fee rewards from owner", async () => {
+        const depositAmount_one = web3.toWei("100", "ether");
+        const depositAmount_two = web3.toWei("150", "ether");
+
+        const participants = await IntelInstance.getParticipants.call();
+        const owner_address = await IntelInstance.owner.call();
+        let owner_balance = await IntelInstance.getParetoBalance.call(owner_address);
+
+        let totalParetoBalance = await IntelInstance.totalParetoBalance.call();
+        assert.equal(totalParetoBalance.toNumber(), owner_balance.toNumber());
+
+
+        // =================== Approve and Deposit Tokens ==================
+        await TokenInstance.approve(IntelInstance.address, depositAmount_one, { from: account_one });
+        await TokenInstance.approve(IntelInstance.address, depositAmount_two, { from: account_two });
+
+        await IntelInstance.makeDeposit(account_one, depositAmount_one, { from: account_one });
+        await IntelInstance.makeDeposit(account_two, depositAmount_two, { from: account_two });
+        // =================== END ==================
+
+        totalParetoBalance = await IntelInstance.totalParetoBalance.call();
+        const Intel_contracts_deposit_balance = await IntelInstance.getParetoBalance.call(IntelInstance.address);
+
+        const participants_balance_before = [];
+        for (let i = 0; i < participants.length; i++) {
+            let balance = await IntelInstance.getParetoBalance.call(participants[i]);
+            participants_balance_before[i] = balance.toNumber();
+        }
+
+        await IntelInstance.distributeFeeRewards(participants, owner_balance.toNumber(), { from: accounts[3] });
+
+        const participants_balance_after = [];
+        for (let i = 0; i < participants.length; i++) {
+            let balance = await IntelInstance.getParetoBalance.call(participants[i]);
+            participants_balance_after[i] = balance.toNumber();
+        }
+
+        for (let q = 0; q < participants.length; q++) {
+            // console.log(web3.toBigNumber(participants_balance_before[q]).toNumber() / (totalParetoBalance.toNumber() - Intel_contracts_deposit_balance.toNumber() - owner_balance.toNumber()) * owner_balance.toNumber());
+            assert.equal(web3.toBigNumber(participants_balance_before[q]).toNumber() + (web3.toBigNumber(participants_balance_before[q]).toNumber() / (totalParetoBalance.toNumber() - Intel_contracts_deposit_balance.toNumber() - owner_balance.toNumber()) * owner_balance.toNumber()), participants_balance_after[q]);
+        }
+
+        owner_balance = await IntelInstance.getParetoBalance.call(owner_address);
+        assert.equal(owner_balance.toNumber(), 0);
+
+
     })
 
 })
