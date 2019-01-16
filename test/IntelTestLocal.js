@@ -132,15 +132,22 @@ contract("Test Intel Contract", async (accounts) => {
         const Intel = await IntelInstance.getIntel(intelID);
         const IntelBalance = Intel[3].toNumber();
 
+        const owner = await IntelInstance.owner.call();
+        const owner_balance_before = await IntelInstance.getParetoBalance.call(owner);
+
         return new Promise((resolve, reject) => {
             setTimeout(async () => {
                 try {
                     await IntelInstance.distributeReward(intelID, { from: account_one });
 
                     const account_one_token_balance_after = await TokenInstance.balanceOf.call(account_one); 
-                    const expected_account_one_balance = (account_one_token_balance_before.toNumber() + (web3.toBigNumber(IntelBalance) * .95)).toPrecision(10)
+                    const expected_account_one_balance = (account_one_token_balance_before.toNumber() + (web3.toBigNumber(IntelBalance).toNumber() * .95)).toPrecision(10)
                     
                     assert.equal(expected_account_one_balance, account_one_token_balance_after.toNumber());
+
+                    const owner_balance_after = await IntelInstance.getParetoBalance.call(owner);
+                    assert.equal((owner_balance_before.toNumber() + (web3.toBigNumber(IntelBalance).toNumber() * 0.05)).toPrecision(10), owner_balance_after.toNumber())
+
 
                     resolve();
                 } catch (err) {
@@ -198,7 +205,7 @@ contract("Test Intel Contract", async (accounts) => {
 
     })
 
-    it("Distribute Intel two using account one", async () => {
+    it("Distribute Intel two using account two", async () => {
         const intelID = 2;
 
         const account_two_token_balance_before = await TokenInstance.balanceOf.call(account_two);
@@ -206,15 +213,21 @@ contract("Test Intel Contract", async (accounts) => {
         const Intel = await IntelInstance.getIntel(intelID);
         const IntelBalance = Intel[3].toNumber();
 
+        const owner = await IntelInstance.owner.call();
+        const owner_balance_before = await IntelInstance.getParetoBalance.call(owner);
+
         return new Promise((resolve, reject) => {
             setTimeout(async () => {
                 try {
                     await IntelInstance.distributeReward(intelID, { from: account_two });
 
                     const account_two_token_balance_after = await TokenInstance.balanceOf.call(account_two); 
-                    const expected_account_two_balance = (account_two_token_balance_before.toNumber() + (web3.toBigNumber(IntelBalance) * .95)).toPrecision(10)
+                    const expected_account_two_balance = (account_two_token_balance_before.toNumber() + (web3.toBigNumber(IntelBalance).toNumber() * .95)).toPrecision(10)
 
                     assert.equal(expected_account_two_balance, account_two_token_balance_after.toNumber());
+
+                    const owner_balance_after = await IntelInstance.getParetoBalance.call(owner);
+                    assert.equal((owner_balance_before.toNumber() + (web3.toBigNumber(IntelBalance).toNumber() * 0.05)).toPrecision(10), owner_balance_after.toNumber())
 
                     resolve();
                 } catch (err) {
