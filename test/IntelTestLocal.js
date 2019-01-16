@@ -22,7 +22,7 @@ contract("Test Intel Contract", async (accounts) => {
 
         const account_one_approve_after = await TokenInstance.allowance.call(account_one, IntelInstance.address);
 
-        assert.equal(parseInt(depositAmount), account_one_approve_after.toNumber());
+        assert.equal(web3.toBigNumber(depositAmount).toNumber(), account_one_approve_after.toNumber());
 
     })
 
@@ -34,7 +34,7 @@ contract("Test Intel Contract", async (accounts) => {
         await IntelInstance.makeDeposit(account_one, depositAmount, { from: account_one });
 
         const account_one_deposit_after = await IntelInstance.getParetoBalance.call(account_one);
-        assert.equal(account_one_deposit_before.toNumber() + parseInt(depositAmount), account_one_deposit_after.toNumber());
+        assert.equal(account_one_deposit_before.toNumber() + web3.toBigNumber(depositAmount).toNumber(), account_one_deposit_after.toNumber());
 
 
     })
@@ -51,19 +51,19 @@ contract("Test Intel Contract", async (accounts) => {
 
         const account_one_deposit_after = await IntelInstance.getParetoBalance.call(account_one);
 
-        assert.equal(account_one_deposit_before.toNumber() - parseInt(depositAmount), account_one_deposit_after.toNumber());
+        assert.equal(account_one_deposit_before.toNumber() - web3.toBigNumber(depositAmount).toNumber(), account_one_deposit_after.toNumber());
 
     })
 
     it("Create Intel two using two steps of approve/create from account two", async () => {
         const depositAmount = web3.toWei("100", "ether");
         const desiredReward = web3.toWei("1000", "ether");
-        const ttl = Math.round(new Date().getTime() / 1000) + 3;
+        const ttl = Math.round(new Date().getTime() / 1000) + 10;
         const intelID = 2;
 
         await TokenInstance.approve(IntelInstance.address, depositAmount, { from: account_two })
         const account_two_approve_after = await TokenInstance.allowance.call(account_two, IntelInstance.address);
-        assert.equal(parseInt(depositAmount), account_two_approve_after.toNumber());
+        assert.equal(web3.toBigNumber(depositAmount).toNumber(), account_two_approve_after.toNumber());
 
         const account_two_token_balance_before = await TokenInstance.balanceOf.call(account_two);
 
@@ -71,7 +71,7 @@ contract("Test Intel Contract", async (accounts) => {
 
         const account_two_token_balance_after = await TokenInstance.balanceOf.call(account_two);
 
-        assert.equal(account_two_token_balance_before.toNumber() - parseInt(depositAmount), account_two_token_balance_after.toNumber());
+        assert.equal(account_two_token_balance_before.toNumber() - web3.toBigNumber(depositAmount).toNumber(), account_two_token_balance_after.toNumber());
 
     })
 
@@ -92,7 +92,7 @@ contract("Test Intel Contract", async (accounts) => {
         Intel = await IntelInstance.getIntel.call(intelID);
         const IntelBalance_after = Intel[3].toNumber();
 
-        assert.equal(IntelBalance_before + parseInt(depositAmount), IntelBalance_after);
+        assert.equal(IntelBalance_before + web3.toBigNumber(depositAmount).toNumber(), IntelBalance_after);
 
         const account_two_deposit_balance = await IntelInstance.getParetoBalance.call(account_two);
         assert.equal(account_two_deposit_balance.toNumber(), 0);
@@ -116,11 +116,11 @@ contract("Test Intel Contract", async (accounts) => {
         Intel = await IntelInstance.getIntel.call(intelID);
         const IntelBalance_after = Intel[3].toNumber();
 
-        assert.equal(IntelBalance_before + parseInt(depositAmount), IntelBalance_after);
+        assert.equal(IntelBalance_before + web3.toBigNumber(depositAmount).toNumber(), IntelBalance_after);
 
         const account_three_token_balance_after = await TokenInstance.balanceOf.call(account_three);
 
-        assert.equal(account_three_token_balance_before.toNumber() - parseInt(depositAmount), account_three_token_balance_after.toNumber())
+        assert.equal(account_three_token_balance_before.toNumber() - web3.toBigNumber(depositAmount).toNumber(), account_three_token_balance_after.toNumber())
 
     })
 
@@ -128,8 +128,6 @@ contract("Test Intel Contract", async (accounts) => {
         const intelID = 1;
 
         const account_one_token_balance_before = await TokenInstance.balanceOf.call(account_one);
-        // const account_two_balance_before = await TokenInstance.balanceOf.call(account_two);
-        // const account_three_balance_before = await TokenInstance.balanceOf.call(account_three);
 
         const Intel = await IntelInstance.getIntel(intelID);
         const IntelBalance = Intel[3].toNumber();
@@ -140,7 +138,7 @@ contract("Test Intel Contract", async (accounts) => {
                     await IntelInstance.distributeReward(intelID, { from: account_one });
 
                     const account_one_token_balance_after = await TokenInstance.balanceOf.call(account_one); 
-                    const expected_account_one_balance = (account_one_token_balance_before.toNumber() + (parseInt(IntelBalance) * .95)).toPrecision(10)
+                    const expected_account_one_balance = (account_one_token_balance_before.toNumber() + (web3.toBigNumber(IntelBalance) * .95)).toPrecision(10)
                     
                     assert.equal(expected_account_one_balance, account_one_token_balance_after.toNumber());
 
@@ -149,6 +147,80 @@ contract("Test Intel Contract", async (accounts) => {
                     reject(err)
                 }
             }, 5000);
+        })
+    })
+
+    it("Reward Intel two with 150 Pareto tokens using deposits from account one", async () => {
+        const depositAmount = web3.toWei("150", "ether");
+        const intelID = 2;
+        let Intel;
+
+        await TokenInstance.approve(IntelInstance.address, depositAmount, { from: account_one });
+
+        await IntelInstance.makeDeposit(account_one, depositAmount, { from: account_one });
+
+        Intel = await IntelInstance.getIntel.call(intelID);
+        const IntelBalance_before = Intel[3].toNumber()
+
+        await IntelInstance.sendReward(intelID, depositAmount, { from: account_one });
+
+        Intel = await IntelInstance.getIntel.call(intelID);
+        const IntelBalance_after = Intel[3].toNumber();
+
+        assert.equal(IntelBalance_before + web3.toBigNumber(depositAmount).toNumber(), IntelBalance_after);
+
+        const account_one_deposit_balance = await IntelInstance.getParetoBalance.call(account_one);
+        assert.equal(account_one_deposit_balance.toNumber(), 0);
+    })
+
+    it("Reward Intel two with 800 Pareto tokens using approve/send two transactions from account three", async () => {
+        const depositAmount = web3.toWei("800", "ether");
+        const intelID = 2;
+        let Intel;
+
+        await TokenInstance.approve(IntelInstance.address, depositAmount, { from: account_three });
+
+        Intel = await IntelInstance.getIntel.call(intelID);
+        const IntelBalance_before = Intel[3].toNumber()
+
+        const account_three_token_balance_before = await TokenInstance.balanceOf.call(account_three);
+
+        await IntelInstance.sendReward(intelID, depositAmount, { from: account_three });
+
+        Intel = await IntelInstance.getIntel.call(intelID);
+        const IntelBalance_after = Intel[3].toNumber();
+
+        assert.equal(IntelBalance_before + web3.toBigNumber(depositAmount).toNumber(), IntelBalance_after);
+
+        const account_three_token_balance_after = await TokenInstance.balanceOf.call(account_three);
+
+        assert.equal(account_three_token_balance_before.toNumber() - web3.toBigNumber(depositAmount).toNumber(), account_three_token_balance_after.toNumber())
+
+    })
+
+    it("Distribute Intel two using account one", async () => {
+        const intelID = 2;
+
+        const account_two_token_balance_before = await TokenInstance.balanceOf.call(account_two);
+
+        const Intel = await IntelInstance.getIntel(intelID);
+        const IntelBalance = Intel[3].toNumber();
+
+        return new Promise((resolve, reject) => {
+            setTimeout(async () => {
+                try {
+                    await IntelInstance.distributeReward(intelID, { from: account_two });
+
+                    const account_two_token_balance_after = await TokenInstance.balanceOf.call(account_two); 
+                    const expected_account_two_balance = (account_two_token_balance_before.toNumber() + (web3.toBigNumber(IntelBalance) * .95)).toPrecision(10)
+
+                    assert.equal(expected_account_two_balance, account_two_token_balance_after.toNumber());
+
+                    resolve();
+                } catch (err) {
+                    reject(err)
+                }
+            }, 7000);
         })
     })
 
