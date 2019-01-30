@@ -184,6 +184,7 @@ contract Intel{
     /// requires 210769 gas in Rinkeby Network
     function create(address intelProvider, uint depositAmount, uint desiredReward, uint intelID, uint ttl) public {
 
+        require(intelID > 0, "Intel's ID should be greater than 0.");
         require(address(intelProvider) != address(0x0), "Intel Provider's address provided is invalid.");
         require(depositAmount > 0, "Amount should be greater than 0.");
         require(desiredReward > 0, "Desired reward should be greater than 0.");
