@@ -8510,6 +8510,11 @@ react-app-polyfill@^0.2.0:
     raf "3.4.0"
     whatwg-fetch "3.0.0"
 
+react-async-component@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/react-async-component/-/react-async-component-2.0.0.tgz#a56c1278ac588291fce6cd5cf033eb97eb36483c"
+  integrity sha512-wefjuqJt5dYQC0y6v5uKqeDhigiVJQN3PO4L2/nF0/r3shtH52iRH3JvLP0UADhNsNnQmyORoqhVOJ59K7XQZA==
+
 react-bootstrap@^0.32.4:
   version "0.32.4"
   resolved "https://registry.yarnpkg.com/react-bootstrap/-/react-bootstrap-0.32.4.tgz#8efc4cbfc4807215d75b7639bee0d324c8d740d1"

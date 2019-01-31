@@ -5,6 +5,7 @@
   "dependencies": {
     "ncp": "^2.0.0",
     "react": "^16.7.0",
+    "react-async-component": "^2.0.0",
     "react-bootstrap": "^0.32.4",
     "react-dom": "^16.7.0",
     "react-scripts": "2.1.3",

@@ -38,13 +38,13 @@ class Home extends Component {
                 </React.Fragment>
             )
         } else {
-            return(
+            return (
                 <React.Fragment>
-                     <Approve />
+                    <Approve />
                 </React.Fragment>
             )
         }
-       
+
     }
 
     render() {
