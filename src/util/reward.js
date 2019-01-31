@@ -1,6 +1,5 @@
 import web3 from './web3';
 import IntelInstance from './IntelInstance';
-import TokenInstance from './TokenInstance';
 
 export default async (id, depositAmount) => {
     const accounts = await web3.eth.getAccounts();
@@ -16,9 +15,9 @@ export default async (id, depositAmount) => {
     } else {
         console.log("two transaction method");
         // ======================
-        await TokenInstance.methods.approve(IntelInstance.options.address, depositAmount).send({
-            from: accounts[0]
-        })
+        // await TokenInstance.methods.approve(IntelInstance.options.address, depositAmount).send({
+        //     from: accounts[0]
+        // })
 
         await IntelInstance.methods.sendReward(id, depositAmount).send({ from: accounts[0] });
 

@@ -24,7 +24,7 @@ class Deposit extends Component {
 
     render() {
         return (
-            <div style={{border: '1px dotted black', padding: '100px', margin: '10px'}}>
+            <div style={{border: '1px dotted black', padding: '100px', margin: '10px', textAlign: 'center', width: '80%'}}>
                 <h2>Deposit Pareto Tokens</h2>
                 <div style={{paddingTop: '30px', textAlign: 'center'}}>
                     <form>
