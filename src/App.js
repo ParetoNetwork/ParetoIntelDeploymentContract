@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-// import Home from './components/Home'
 import { asyncComponent } from "react-async-component";
 import MetamaskAlert from './components/MetamaskAlert';
 class App extends Component {

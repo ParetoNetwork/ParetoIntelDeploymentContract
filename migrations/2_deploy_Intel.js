@@ -20,7 +20,7 @@ module.exports = (deployer, network, accounts) => {
     });
   } else if (network === "ropsten") {
     console.log("Network is ropsten");
-    deployer.deploy(Intel, owner, ParetoTokenAddress, {
+    deployer.deploy(Intel, owner, "0xbcce0c003b562f47a319dfca4bce30d322fa0f01", {
       from: accounts[0],
       gasPrice: 15000000000
     })

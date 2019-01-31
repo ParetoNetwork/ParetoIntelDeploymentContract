@@ -34,8 +34,9 @@ class Create extends Component {
         this.setState({ expireTime: e.target.value })
     }
 
-    depositTokens = async () => {
-        await createIntel(this.state.providerAddress, this.state.tokenDepositAmount, this.state.rewardAmount, this.state.id, this.state.expireTime);
+    onCreateIntel = async () => {
+        const time = Math.round(new Date().getTime() / 1000) + 720;
+        await createIntel(this.state.providerAddress, this.state.tokenDepositAmount, this.state.rewardAmount, this.state.id, time);
     }
 
     render() {
@@ -87,7 +88,7 @@ class Create extends Component {
                                 />
                                 <FormControl.Feedback />
                             </div>
-                            <div style={{ paddingTop: '10px' }}>
+                            {/* <div style={{ paddingTop: '10px' }}>
                                 <ControlLabel>Enter Intel's expiration time in EPOCH format</ControlLabel>
                                 <FormControl
                                     type="text"
@@ -96,9 +97,9 @@ class Create extends Component {
                                     onChange={this.handleExpireTimeChange}
                                 />
                                 <FormControl.Feedback />
-                            </div>
+                            </div> */}
                         </FormGroup>
-                        <Button bsStyle="primary" onClick={this.depositTokens}>Deposit!</Button>
+                        <Button bsStyle="primary" onClick={this.onCreateIntel}>Deposit!</Button>
 
                     </form>
                 </div>

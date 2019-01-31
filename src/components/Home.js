@@ -19,7 +19,8 @@ class Home extends Component {
 
     async componentDidMount() {
         const allowance = await checkAllowance()
-        if (allowance > web3.utils.toWei("50000", "ether")) {
+        console.log("Allowance: ", allowance);
+        if (web3.utils.fromWei(allowance, "ether") >= 50000) {
             this.setState({ allowance: true });
         } else {
             this.setState({ allowance: false });
