@@ -13,7 +13,7 @@ export default async (id, depositAmount) => {
         await IntelInstance.methods.sendReward(id, depositAmount).send({ from: accounts[0] });
 
     } else {
-        console.log("two transaction method");
+        console.log("You don't have enough deposited balance in the contract and the tokens will taken from your account");
         // ======================
         // await TokenInstance.methods.approve(IntelInstance.options.address, depositAmount).send({
         //     from: accounts[0]
