@@ -24,6 +24,11 @@ module.exports = (deployer, network, accounts) => {
       from: accounts[0],
       gasPrice: 15000000000
     })
+  } else if(network === "mainnet"){
+    deployer.deploy(Intel, owner, ParetoTokenAddress, {
+      from: accounts[0],
+      gasPrice: 15000000000
+    })
   }
 
 };
