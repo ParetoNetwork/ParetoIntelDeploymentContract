@@ -1,6 +1,6 @@
 var HDWalletProvider = require("truffle-hdwallet-provider");
 
-var mnemonic = "avocado armed also position solution total token maze deny neutral bless share";
+var mnemonic = ""; //takes any length mnemonic, uses m/44'/60'/0'/0/0 derivation path to resolve address[0]
 
 module.exports = {
   networks: {
@@ -27,7 +27,7 @@ module.exports = {
     },
     mainnet: {
       provider: function() {
-        return new HDWalletProvider(mnemonic, "https://internally-settling-racer.quiknode.io/b5d97fc4-1946-4411-87e1-c7d961fb0e8d/X2kLtRMEBbjEkSJCCK8hFA==/")
+        return new HDWalletProvider(mnemonic, "https://mainnet.infura.io/QWMgExFuGzhpu2jUr6Pq")
       },
       network_id: 1,
       gas: 4712388

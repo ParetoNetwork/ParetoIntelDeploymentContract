@@ -2,13 +2,15 @@ var ncp = require('ncp').ncp;
 var DummyToken = artifacts.require("DummyToken");
 
 module.exports = function (deployer, network, accounts) {
-    deployer.deploy(DummyToken);
-    ncp.limit = 16;
+    if(network !== "mainnet") {
+        deployer.deploy(DummyToken);
+        ncp.limit = 16;
 
-    ncp("build", "src", function (err) {
-        if (err) {
-            return console.error(err);
-        }
-        console.log('done!');
-    });
+        ncp("build", "src", function (err) {
+            if (err) {
+                return console.error(err);
+            }
+            console.log('done!');
+        });
+    }
 }
