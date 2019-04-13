@@ -19,7 +19,11 @@ let privateKeyBuff = new Buffer(privKey, "hex");
 const wallet = ETHwallet.fromPrivateKey(privateKeyBuff);
 const publicKey = wallet.getChecksumAddressString();
 
-startDistribution();
+try {
+  startDistribution();
+} catch (err) {
+  console.log("Error: ", err);
+}
 
 async function startDistribution() {
   console.log(`
@@ -32,15 +36,68 @@ async function startDistribution() {
 
   console.log(`There are ${participants.length} participants`);
 
-  let gPrice, txData, data, transaction, serializedTx, gas;
-  let nonceNumber = await web3.eth.getTransactionCount(publicKey);
-  let owner_balance = await intelInstance.methods
-    .getParetoBalance(publicKey)
-    .call();
+  let nonceNumber = await getNonce(publicKey);
+  let owner_balance = await getOwnerBalance(publicKey);
 
-  let batch = [];
   const participants_batches = [];
+  prepareParticipantsBatches(participants, participants_batches);
+
+  for (let i = 0; i < participants_batches.length; i++) {
+    await makeTransaction(
+      participants_batches[i],
+      owner_balance,
+      nonceNumber++
+    );
+  }
+}
+
+async function makeTransaction(participant_batch, owner_balance, nonce) {
+  let gPrice, txData, data, transaction, serializedTx, gas;
+
+  gPrice = await web3.eth.getGasPrice();
+  console.log("Gas Price: ", gPrice);
+
+  gas = await intelInstance.methods
+    .distributeFeeRewards(participant_batch, owner_balance)
+    .estimateGas({ from: publicKey });
+
+  data = intelInstance.methods
+    .distributeFeeRewards(participant_batch, owner_balance)
+    .encodeABI();
+  // construct the transaction data
+  txData = {
+    nonce: web3.utils.toHex(nonce),
+    gasLimit: web3.utils.toHex(gas),
+    gasPrice: web3.utils.toHex(gPrice),
+    to: intelAddress,
+    from: publicKey,
+    data
+  };
+
+  transaction = new Tx(txData);
+  transaction.sign(privateKeyBuff);
+  serializedTx = transaction.serialize().toString("hex");
+  web3.eth.sendSignedTransaction("0x" + serializedTx, (err, hash) => {
+    console.log(hash);
+  });
+}
+
+async function getAllParticipants() {
+  const participants = await intelInstance.methods.getParticipants().call();
+  return participants;
+}
+
+async function getNonce(publicKey) {
+  return await web3.eth.getTransactionCount(publicKey);
+}
+
+async function getOwnerBalance(publicKey) {
+  return await intelInstance.methods.getParetoBalance(publicKey).call();
+}
+
+function prepareParticipantsBatches(participants, participants_batches) {
   let index = 0;
+  let batch = [];
   for (let i = 0; i < participants.length; i++) {
     batch.push(participants[i]);
     index++;
@@ -51,45 +108,5 @@ async function startDistribution() {
       batch = [];
     }
   }
-
   participants_batches.push(batch);
-
-  console.log(participants_batches);
-  gPrice = await web3.eth.getGasPrice();
-  console.log("Gas Price: ",gPrice);
-
-  for (let i = 0; i < participants_batches.length; i++) {
-    try {
-      gas = await intelInstance.methods
-        .distributeFeeRewards(participants_batches[i], owner_balance)
-        .estimateGas({ from: publicKey });
-
-      data = intelInstance.methods
-        .distributeFeeRewards(participants_batches[i], owner_balance)
-        .encodeABI();
-      // construct the transaction data
-      txData = {
-        nonce: web3.utils.toHex(nonceNumber++),
-        gasLimit: web3.utils.toHex(gas),
-        gasPrice: web3.utils.toHex(gPrice),
-        to: intelAddress,
-        from: publicKey,
-        data
-      };
-
-      transaction = new Tx(txData);
-      transaction.sign(privateKeyBuff);
-      serializedTx = transaction.serialize().toString("hex");
-      web3.eth.sendSignedTransaction("0x" + serializedTx, (err, hash) => {
-        console.log(hash);
-      });
-    } catch (err) {
-      console.log("ERROR:", err);
-    }
-  }
-}
-
-async function getAllParticipants() {
-  const participants = await intelInstance.methods.getParticipants().call();
-  return participants;
 }
