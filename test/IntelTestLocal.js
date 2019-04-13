@@ -267,7 +267,7 @@ contract("Test Intel Contract", async (accounts) => {
         const depositAmount_one = web3.toWei("100", "ether");
         const depositAmount_two = web3.toWei("150", "ether");
 
-        const participants = await IntelInstance.getParticipants.call();
+        const participants = [account_one, account_two];
         const owner_address = await IntelInstance.owner.call();
         let owner_balance = await IntelInstance.getParetoBalance.call(owner_address);
 
