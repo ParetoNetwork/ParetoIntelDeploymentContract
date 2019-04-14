@@ -31,3 +31,15 @@ Copy the `Intel.json` file under `build/contracts` on this repository and replac
 ####6.3 - Launch Gananche. Click on Settings. Take the mnemonics from IntelTest.js paste them into the Ganache textfield for mnemonics on Account & Keys. Hit Save and Restart.
 ####6.4 - Run against your local environment - truffle test --network development
 ####6.5 - If no events are emitted when you run the test, you may need to increment your _intelID
+
+
+# Distribute Fee rewards
+You will set the following fields in config.js under script directory
+1 - "intelAddress" will be set to the Intel contract's address
+2 - "ownerPrivateKey" will be set to the private key of owner ( this address has to be the owner of Intel contract )
+3 - "network_URL" will be set to the URL of Ethereum network
+
+next, you will run the command under script directory
+```
+node distributeFee.js
+``
