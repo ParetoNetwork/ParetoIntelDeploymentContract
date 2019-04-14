@@ -45,6 +45,7 @@ You will set the following fields in config.js under script directory
 "network_URL" will be set to the URL of Ethereum network
 ```
 next, you will run the command under script directory
+
 ```
 node distributeFee.js
-``
+```
