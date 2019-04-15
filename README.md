@@ -34,7 +34,9 @@ Copy the `Intel.json` file under `build/contracts` on this repository and replac
 
 
 # Distribute Fee rewards
-You will set the following fields in config.js under script directory
+## The Distribute Fee Rewards script is independent of the Truffle project. You should be able to run the script without getting the Truffle project to build.
+## You will need to do a npm install at the root directory of the project to resolve all of the node modules include ethereum-tx
+## You will set the following fields in config.js under script directory
 ```
 "intelAddress" will be set to the Intel contract's address
 ```

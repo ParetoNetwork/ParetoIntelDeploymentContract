@@ -38,6 +38,7 @@ async function startDistribution() {
 
   let nonceNumber = await getNonce(publicKey);
   let owner_balance = await getOwnerBalance(publicKey);
+  console.log( 'The amount of Pareto that will get distributed ' + owner_balance );
 
   const participants_batches = [];
   prepareParticipantsBatches(participants, participants_batches);
@@ -78,7 +79,7 @@ async function makeTransaction(participant_batch, owner_balance, nonce) {
   transaction.sign(privateKeyBuff);
   serializedTx = transaction.serialize().toString("hex");
   web3.eth.sendSignedTransaction("0x" + serializedTx, (err, hash) => {
-    console.log(hash);
+    console.log('Transaction address for the distribution ' + hash);
   });
 }
 
@@ -100,6 +101,7 @@ function prepareParticipantsBatches(participants, participants_batches) {
   let batch = [];
   for (let i = 0; i < participants.length; i++) {
     batch.push(participants[i]);
+	console.log( 'Participant will receive a distribution ' + participants[i] );
     index++;
 
     if (index >= BATCH_SIZE) {
