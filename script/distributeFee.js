@@ -45,13 +45,13 @@ async function startDistribution() {
   const participants_batches = [];
   await prepareParticipantsBatches(participants, participants_batches);
 
-  // for (let i = 0; i < participants_batches.length; i++) {
-  //   await makeTransaction(
-  //     participants_batches[i],
-  //     owner_balance,
-  //     nonceNumber++
-  //   );
-  // }
+  for (let i = 0; i < participants_batches.length; i++) {
+    await makeTransaction(
+      participants_batches[i],
+      owner_balance,
+      nonceNumber++
+    );
+  }
 }
 
 async function makeTransaction(participant_batch, owner_balance, nonce) {
