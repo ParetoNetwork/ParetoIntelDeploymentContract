@@ -37,19 +37,21 @@ async function startDistribution() {
   console.log(`There are ${participants.length} participants`);
 
   let nonceNumber = await getNonce(publicKey);
-  let owner_balance = await getOwnerBalance(publicKey);
-  console.log( 'The amount of Pareto that will get distributed ' + owner_balance );
+  let owner_balance = await getOwnerDepositBalance(publicKey);
+  console.log(
+    "The amount of Pareto that will get distributed " + owner_balance / 10 ** 18
+  );
 
   const participants_batches = [];
-  prepareParticipantsBatches(participants, participants_batches);
+  await prepareParticipantsBatches(participants, participants_batches);
 
-  for (let i = 0; i < participants_batches.length; i++) {
-    await makeTransaction(
-      participants_batches[i],
-      owner_balance,
-      nonceNumber++
-    );
-  }
+  // for (let i = 0; i < participants_batches.length; i++) {
+  //   await makeTransaction(
+  //     participants_batches[i],
+  //     owner_balance,
+  //     nonceNumber++
+  //   );
+  // }
 }
 
 async function makeTransaction(participant_batch, owner_balance, nonce) {
@@ -79,7 +81,7 @@ async function makeTransaction(participant_batch, owner_balance, nonce) {
   transaction.sign(privateKeyBuff);
   serializedTx = transaction.serialize().toString("hex");
   web3.eth.sendSignedTransaction("0x" + serializedTx, (err, hash) => {
-    console.log('Transaction address for the distribution ' + hash);
+    console.log("Transaction address for the distribution " + hash);
   });
 }
 
@@ -92,16 +94,50 @@ async function getNonce(publicKey) {
   return await web3.eth.getTransactionCount(publicKey);
 }
 
-async function getOwnerBalance(publicKey) {
+async function getOwnerDepositBalance(publicKey) {
   return await intelInstance.methods.getParetoBalance(publicKey).call();
 }
 
-function prepareParticipantsBatches(participants, participants_batches) {
+async function getTotalParetoBalance() {
+  return await intelInstance.methods.totalParetoBalance().call();
+}
+
+async function getIntelContractDepositBalance() {
+  return await intelInstance.methods
+    .getParetoBalance(intelInstance.options.address)
+    .call();
+}
+
+async function getParetoDepositBalance(address) {
+  return await intelInstance.methods.getParetoBalance(address).call();
+}
+
+async function prepareParticipantsBatches(participants, participants_batches) {
   let index = 0;
   let batch = [];
+  const totalParetoBalance = await getTotalParetoBalance();
+  const owner_balance = await getOwnerDepositBalance(publicKey);
+  const Intel_contract_balance = await getIntelContractDepositBalance();
+
+  const totalCirculatingAmount =
+    totalParetoBalance - Intel_contract_balance - owner_balance;
+
   for (let i = 0; i < participants.length; i++) {
+    if (participants[i] === publicKey) {
+      continue;
+    }
+
     batch.push(participants[i]);
-	console.log( 'Participant will receive a distribution ' + participants[i] );
+
+    const participant_balance = await getParetoDepositBalance(participants[i]);
+    console.log(
+      participants[i] +
+        " Participant will receive a distribution of " +
+        ((participant_balance / totalCirculatingAmount) * owner_balance) /
+          10 ** 18 +
+        ", current balance " +
+        participant_balance / 10 ** 18
+    );
     index++;
 
     if (index >= BATCH_SIZE) {
