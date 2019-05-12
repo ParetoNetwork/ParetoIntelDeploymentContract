@@ -333,10 +333,10 @@ contract Intel{
         uint fee = distributed_amount.div(4);    // calculate 4% as the fees for distribution
         distributed_amount = distributed_amount.sub(fee);   // calculate final distribution amount
 
-        token.transfer(msg.sender, fee*.25);  // transfer 1% fee to the distributor which is 1/4th of the total fee
-        balances[owner] = balances[owner].add(fee*.25);  // update balances with 1%, which is 1/4th of the total fee worth of distribution amount for the owner
+        token.transfer(msg.sender, fee / 4);  // transfer 1% fee to the distributor which is 1/4th of the total fee
+        balances[owner] = balances[owner].add(fee / 4);  // update balances with 1%, which is 1/4th of the total fee worth of distribution amount for the owner
         token.transfer(intel.intelProvider, distributed_amount); // transfer the 96% token to the intel provider
-        totalParetoBalance = totalParetoBalance.sub(distributed_amount.add(fee*.75)); // update balances with subtraction of 96% of distributing tokens from the Intel contract
+        totalParetoBalance = totalParetoBalance.sub(distributed_amount.add(fee * 3 / 4)); // update balances with subtraction of 96% of distributing tokens from the Intel contract
        
 
         emit RewardDistributed(intelIndex, distributed_amount, intel.intelProvider, msg.sender, fee);
