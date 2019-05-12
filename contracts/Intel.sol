@@ -330,7 +330,7 @@ contract Intel{
         balances[address(this)] = balances[address(this)].sub(distributed_amount);  // subtract distributed_amount worth of tokens from balances for the Intel smart contract
         intel.balance = 0;
 
-        uint fee = distributed_amount.div(4);    // calculate 4% as the fees for distribution
+        uint fee = distributed_amount.div(25);    // calculate 4% as the fees for distribution (X divided by 25)
         distributed_amount = distributed_amount.sub(fee);   // calculate final distribution amount
 
         token.transfer(msg.sender, fee / 4);  // transfer 1% fee to the distributor which is 1/4th of the total fee
