@@ -11,7 +11,7 @@ module.exports = {
     },
     ropsten: {
       provider: function() {
-        return new HDWalletProvider(mnemonic, "https://heavily-resolved-condor.quiknode.io/adc544a9-3571-41db-ba04-b4e00d19b728/szTTYvyyy-oAGZVn3CR7EQ==/",0,9)
+        return new HDWalletProvider(mnemonic, "https://ropsten.infura.io/v3/8f0be0e5fb5f470ebd4c1a9cfdcc77dd",0 ,9)
       },
       network_id: 3,
       gas: 4712388
@@ -27,7 +27,7 @@ module.exports = {
     },
     mainnet: {
       provider: function() {
-        return new HDWalletProvider(mnemonic, "https://mainnet.infura.io/QWMgExFuGzhpu2jUr6Pq")
+        return new HDWalletProvider(mnemonic, "https://mainnet.infura.io/v3/8f0be0e5fb5f470ebd4c1a9cfdcc77dd")
       },
       network_id: 1,
       gas: 4712388
