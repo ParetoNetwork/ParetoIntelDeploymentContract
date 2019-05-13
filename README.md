@@ -34,6 +34,15 @@ Troubleshooting: use --reset if the command doesn't connect to the network (If "
 truffle migrate --reset --network mainnet
 ```
 
+More Troubleshooting: sometimes delete the whole build folder - especially after deploying on a different network already - go to the parent folder and run 
+```
+truffle migrate
+```
+it should recreate the build/contracts folder and then run
+```
+ truffle migrate --reset --network ropsten
+```
+
 ### 5 - Integrate the artifact file into staging branch of ParetoNetworkServer
 Copy the `Intel.json` file under `build/contracts` on this repository and replace it with the `Intel.json` file under `build/contracts` in `staging` branch of `ParetoNetworkServer`.
 
