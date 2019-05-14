@@ -43,8 +43,15 @@ it should recreate the build/contracts folder and then run
  truffle migrate --reset --network ropsten
 ```
 
-### 5 - Integrate the artifact file into staging branch of ParetoNetworkServer
-Copy the `Intel.json` file under `build/contracts` on this repository and replace it with the `Intel.json` file under `build/contracts` in `staging` branch of `ParetoNetworkServer`.
+### 5 - Integrate the artifact file into development and staging branch of ParetoNetworkServer
+
+#### Development
+Copy the `Intel.json` file under `build/contracts` on this repository and paste it in `build/contracts` in the `development` branch of `ParetoNetworkServer`. RENAME `Intel.json` in that folder to `Intel-ropsten.json` 
+
+#### Staging
+Copy the `Intel.json` file under `build/contracts` on this repository and paste it in `build/contracts` in the `staging` branch of `ParetoNetworkServer`. RENAME `Intel.json` in that folder to `Intel-mainnet.json` 
+
+This avoids merge conflicts upstream
 
 ### 6 - Unit Test - truffle test
 ####6.1 - npm install web3 - Required by IntelTest.js
